@@ -10,6 +10,7 @@ const PokemonApp = () => {
   const [offset, setOffset] = useState(0)
   const [searchValue, setSearchValue] = useState('')
   const [onsearch, setOnsearch] = useState(false)
+  const [isFavoritesView, setIsFavoritesView] = useState(false)
   const {
     data,
     error,
@@ -24,7 +25,7 @@ const PokemonApp = () => {
     initialPageParam: 0,
     getNextPageParam: () => {
       const isMax = offset + 30 >= 150
-      console.log('isMax:', isMax, 'offset:', offset, 'offset+30:', offset + 30)
+      // console.log('isMax:', isMax, 'offset:', offset, 'offset+30:', offset + 30)
       if (isMax) return undefined
       return offset + 30
     }
@@ -64,10 +65,16 @@ const PokemonApp = () => {
             </div>
             {/* view all / view favorites */}
             <div className="flex justify-end text-[#4353cc]">
-              <button className="mr-2 px-4 py-2 " onClick={() => {}}>
+              <button
+                className="mr-2 px-4 py-2 "
+                onClick={() => setIsFavoritesView(false)}
+              >
                 View All
               </button>
-              <button className="px-4 py-2 " onClick={() => {}}>
+              <button
+                className="px-4 py-2 "
+                onClick={() => setIsFavoritesView(true)}
+              >
                 View Favorites
               </button>
             </div>
@@ -82,6 +89,7 @@ const PokemonApp = () => {
             fetchNextPage={fetchNextPage}
             hasNextPage={hasNextPage}
             isFetchingNextPage={isFetchingNextPage}
+            isFavoritesView={isFavoritesView}
           />
         </div>
       </div>

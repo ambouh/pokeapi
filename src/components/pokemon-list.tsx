@@ -10,6 +10,7 @@ interface PokemonListProps {
   fetchNextPage: () => void
   hasNextPage: boolean | undefined
   isFetchingNextPage: boolean
+  isFavoritesView: boolean
 }
 
 const PokemonList = ({
@@ -18,7 +19,8 @@ const PokemonList = ({
   setOffset,
   fetchNextPage,
   hasNextPage,
-  isFetchingNextPage
+  isFetchingNextPage,
+  isFavoritesView
 }: PokemonListProps) => {
   const queryClient = useQueryClient()
   const pokemonList = queryClient.getQueryData(['pokemon'])
@@ -34,7 +36,15 @@ const PokemonList = ({
                 <Chip
                   key={pokemon.url}
                   pokemon={pokemon}
-                  // setFavorite={setFavorite}
+                  pageIndex={pageIndex}
+                  pokemonIndex={pokemonIndex}
+                />
+              ) : null
+            } else if (isFavoritesView) {
+              return pokemon.isFavorite ? (
+                <Chip
+                  key={pokemon.url}
+                  pokemon={pokemon}
                   pageIndex={pageIndex}
                   pokemonIndex={pokemonIndex}
                 />
@@ -44,7 +54,6 @@ const PokemonList = ({
                 <Chip
                   key={pokemon.url}
                   pokemon={pokemon}
-                  // setFavorite={setFavorite}
                   pageIndex={pageIndex}
                   pokemonIndex={pokemonIndex}
                 />

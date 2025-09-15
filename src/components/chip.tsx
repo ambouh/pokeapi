@@ -13,15 +13,19 @@ const Chip = ({
   pokemonIndex: number
 }) => {
   const queryClient = useQueryClient()
-  const handleFavoriteToggle = (
-    pokemon: Pokemon,
-    pageIndex: number,
-    pokemonIndex: number
-  ) => {
+  const handleFavoriteToggle = (pageIndex: number, pokemonIndex: number) => {
     queryClient.setQueryData(['pokemon'], (oldData: { pages: Pokemon[][] }) => {
-      const newData = { ...oldData }
-      newData.pages[pageIndex][pokemonIndex].isFavorite = !pokemon.isFavorite
-      return newData
+      if (!oldData) return oldData
+      const newPages = oldData.pages.map((page, pIdx) =>
+        pIdx === pageIndex
+          ? page.map((poke, idx) =>
+              idx === pokemonIndex
+                ? { ...poke, isFavorite: !poke.isFavorite }
+                : poke
+            )
+          : page
+      )
+      return { ...oldData, pages: newPages }
     })
   }
   return (
@@ -29,7 +33,7 @@ const Chip = ({
       className={`${
         pokemon.isFavorite ? 'bg-[#e2e4f3]' : 'bg-[#f1f2f9]'
       } cursor-pointer rounded-lg px-4 py-2 font-light text-[#0d0d0e] hover:bg-[#e2e4f3]`}
-      onClick={() => handleFavoriteToggle(pokemon, pageIndex, pokemonIndex)}
+      onClick={() => handleFavoriteToggle(pageIndex, pokemonIndex)}
     >
       <span>{pokemon.name}</span>
       {pokemon.isFavorite ? (
