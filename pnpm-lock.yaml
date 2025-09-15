@@ -14,6 +14,9 @@ importers:
       '@tanstack/react-query-devtools':
         specifier: ^5.87.4
         version: 5.87.4(@tanstack/react-query@5.87.4(react@18.3.1))(react@18.3.1)
+      lucide-react:
+        specifier: ^0.544.0
+        version: 0.544.0(react@18.3.1)
       react:
         specifier: ^18.3.1
         version: 18.3.1
@@ -1459,6 +1462,11 @@ packages:
 
   lru-cache@10.4.3:
     resolution: {integrity: sha512-JNAzZcXrCt42VGLuYz0zfAzDfAvJWW6AfYlDBQyDV5DClI2m5sAmK+OIO7s59XfsRsWHp02jAJrRadPRGTt6SQ==}
+
+  lucide-react@0.544.0:
+    resolution: {integrity: sha512-t5tS44bqd825zAW45UQxpG2CvcC4urOwn2TrwSH8u+MjeE+1NnWl6QqeQ/6NdjMqdOygyiT9p3Ev0p1NJykxjw==}
+    peerDependencies:
+      react: ^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0
 
   lz-string@1.5.0:
     resolution: {integrity: sha512-h5bgJWpxJNswbU7qCrV0tIKQCaS3blPDrqKWx+QxzuzL1zGUzij9XCWLrSLsJPu5t+eWA/ycetzYAO5IOMcWAQ==}
@@ -3691,6 +3699,10 @@ snapshots:
       get-func-name: 2.0.2
 
   lru-cache@10.4.3: {}
+
+  lucide-react@0.544.0(react@18.3.1):
+    dependencies:
+      react: 18.3.1
 
   lz-string@1.5.0: {}
 
