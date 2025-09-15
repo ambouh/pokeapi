@@ -6,7 +6,7 @@ import Chip from './chip'
 interface PokemonListProps {
   searchValue: string
   onSearch: boolean
-  setOffset: (offset: number) => void
+  setOffset: React.Dispatch<React.SetStateAction<number>>
   fetchNextPage: () => void
   hasNextPage: boolean | undefined
   isFetchingNextPage: boolean
@@ -23,7 +23,8 @@ const PokemonList = ({
   isFavoritesView
 }: PokemonListProps) => {
   const queryClient = useQueryClient()
-  const pokemonList = queryClient.getQueryData(['pokemon'])
+  const pokemonList: { pages: Pokemon[][] } | undefined =
+    queryClient.getQueryData(['pokemon'])
   return (
     <div className={`col-span-10 col-start-2 flex flex-wrap gap-4 px-6`}>
       {pokemonList &&
@@ -65,7 +66,7 @@ const PokemonList = ({
         className={`rounded-3xl bg-[#051031] px-4 py-1 text-sm font-light text-white`}
         onClick={() => {
           // update offset count BUT is not reflected in the query until next fetch
-          setOffset((prev) => prev + 30)
+          setOffset((prev: number) => prev + 30)
           fetchNextPage()
         }}
         disabled={!hasNextPage || isFetchingNextPage}
