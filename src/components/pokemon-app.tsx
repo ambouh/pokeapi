@@ -1,35 +1,24 @@
-import { useInfiniteQuery } from '@tanstack/react-query'
-import { fetchPokemon } from 'api/pokemon'
-import { useState } from 'react'
-import Submit from 'assets/submit.png'
-import Logo from 'assets/pokeapi-logo.png'
+import { QueryErrorResetBoundary, useInfiniteQuery } from "@tanstack/react-query";
+import { fetchPokemon } from "api/pokemon";
+import {
+  Component,
+  Suspense,
+  useState,
+  type ErrorInfo,
+  type ReactNode,
+} from "react";
+import Submit from "assets/submit.png";
+import Logo from "assets/pokeapi-logo.png";
 
-import PokemonList from './pokemon-list'
+import PokemonList from "./pokemon-list";
+
+const PAGE_SIZE = 30;
+const MAX_POKEMON = 150;
 
 const PokemonApp = () => {
-  const [offset, setOffset] = useState(0)
-  const [searchValue, setSearchValue] = useState('')
-  const [onsearch, setOnsearch] = useState(false)
-  const [isFavoritesView, setIsFavoritesView] = useState(false)
-  const {
-    data,
-    error,
-    fetchNextPage,
-    hasNextPage,
-    isFetching,
-    isFetchingNextPage,
-    status
-  } = useInfiniteQuery({
-    queryKey: ['pokemon'],
-    queryFn: ({ pageParam }) => fetchPokemon(pageParam),
-    initialPageParam: 0,
-    getNextPageParam: () => {
-      const isMax = offset + 30 >= 150
-      // console.log('isMax:', isMax, 'offset:', offset, 'offset+30:', offset + 30)
-      if (isMax) return undefined
-      return offset + 30
-    }
-  })
+  const [searchValue, setSearchValue] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isFavoritesView, setIsFavoritesView] = useState(false);
 
   return (
     <div
@@ -53,11 +42,16 @@ const PokemonApp = () => {
                 type="text"
                 placeholder="Search for a Pokemon..."
                 onChange={(e) => setSearchValue(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && setOnsearch(!onsearch)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    setSearchQuery(e.currentTarget.value.trim());
+                  }
+                }}
                 className="mr-2 w-full rounded text-lg font-light text-[#5b6888] outline-none"
               />
               <button
-                onClick={() => setOnsearch(!onsearch)}
+                onClick={() => setSearchQuery(searchValue.trim())}
                 className="grid size-10 place-items-center rounded-[15px] bg-[#011345]"
               >
                 <img src={Submit} alt="Submit" className="w-5" />
@@ -80,21 +74,114 @@ const PokemonApp = () => {
             </div>
           </div>
         </div>
-        {/* <PokemonSearch /> */}
+        {/* results */}
         <div className="col-span-10 col-start-2">
-          <PokemonList
-            searchValue={searchValue}
-            onSearch={onsearch}
-            setOffset={setOffset}
-            fetchNextPage={fetchNextPage}
-            hasNextPage={hasNextPage}
-            isFetchingNextPage={isFetchingNextPage}
-            isFavoritesView={isFavoritesView}
-          />
+          <QueryErrorResetBoundary>
+            {({ reset }) => (
+              <PokemonErrorBoundary
+                onReset={reset}
+                fallback={(handleReset) => (
+                  <div className="rounded-3xl bg-white p-6 text-center text-red-500">
+                    <p className="mb-3 font-medium">
+                      Failed to load Pokémon. Please try again.
+                    </p>
+                    <button
+                      className="rounded-full bg-[#011345] px-4 py-2 text-sm text-white"
+                      onClick={handleReset}
+                    >
+                      Retry
+                    </button>
+                  </div>
+                )}
+              >
+                <Suspense
+                  fallback={
+                    <div className="rounded-3xl bg-white p-6 text-center text-[#5b6888]">
+                      Loading Pokédex...
+                    </div>
+                  }
+                >
+                  <PokemonListSection
+                    key={searchQuery}
+                    searchValue={searchQuery}
+                    isFavoritesView={isFavoritesView}
+                  />
+                </Suspense>
+              </PokemonErrorBoundary>
+            )}
+          </QueryErrorResetBoundary>
         </div>
       </div>
     </div>
-  )
+  );
+};
+
+const PokemonListSection = ({
+  searchValue,
+  isFavoritesView,
+}: {
+  searchValue: string;
+  isFavoritesView: boolean;
+}) => {
+  const { fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteQuery({
+    queryKey: ["pokemon"],
+    queryFn: ({ pageParam = 0 }) => fetchPokemon(pageParam),
+    initialPageParam: 0,
+    getNextPageParam: (_lastPage, pages) => {
+      const nextOffset = pages.length * PAGE_SIZE;
+      return nextOffset >= MAX_POKEMON ? undefined : nextOffset;
+    },
+    suspense: true,
+    useErrorBoundary: true,
+  });
+
+  return (
+    <PokemonList
+      searchValue={searchValue}
+      fetchNextPage={fetchNextPage}
+      hasNextPage={hasNextPage}
+      isFetchingNextPage={isFetchingNextPage}
+      isFavoritesView={isFavoritesView}
+    />
+  );
+};
+
+type PokemonErrorBoundaryProps = {
+  children: ReactNode;
+  fallback: (reset: () => void) => ReactNode;
+  onReset?: () => void;
+};
+
+type PokemonErrorBoundaryState = {
+  hasError: boolean;
+};
+
+class PokemonErrorBoundary extends Component<
+  PokemonErrorBoundaryProps,
+  PokemonErrorBoundaryState
+> {
+  state: PokemonErrorBoundaryState = { hasError: false };
+
+  static getDerivedStateFromError(): PokemonErrorBoundaryState {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error("Pokemon list failed to load", error, errorInfo);
+  }
+
+  private handleReset = () => {
+    this.setState({ hasError: false });
+    this.props.onReset?.();
+  };
+
+  render() {
+    if (this.state.hasError) {
+      return this.props.fallback(this.handleReset);
+    }
+
+    return this.props.children;
+  }
 }
 
-export default PokemonApp
+export default PokemonApp;
